@@ -1,0 +1,25 @@
+# Large artifacts: attach to a GitHub Release / Zenodo instead of committing
+_release_assets/
+_workspace_notes/
+
+# Data that is downloaded or produced locally
+data/input_video/*
+!data/input_video/.gitkeep
+data/main_runs/*
+!data/main_runs/.gitkeep
+data/logs/
+data/images_result/
+data/results/
+
+# Model weights
+*.pt
+*.pth
+*.safetensors
+
+# Python / editor
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
