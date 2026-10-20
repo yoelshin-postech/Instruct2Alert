@@ -72,7 +72,7 @@ python scripts/evaluate.py --run-root data/main_runs/run
 | Scenarios | 100: 50 **Event** (instantaneous) and 50 **State** (duration-conditioned) |
 | Videos | 85, from UCF-Crime, AI-Hub CCTV, YouTube, iSafetyBench, NWPU Campus, WEDA-FALL |
 | Domains | Public 55, Industrial 28, Traffic 17 |
-| Annotation | Alert intervals per scenario; independent relabeling of 20 scenarios gives mean temporal IoU 0.790 |
+| Annotation | Alert intervals per scenario; inter-annotator agreement is reported in the paper's supplementary material |
 | Files | [`data/datasets/safety_vlm_dataset.xlsx`](data/datasets/safety_vlm_dataset.xlsx), [`data/video_sources.csv`](data/video_sources.csv) |
 
 The videos are not redistributed. Unedited videos can be obtained from their original sources ([`data/README.md`](data/README.md)). Some clips were trimmed or edited for the benchmark; to request them for non-commercial research use, email **yoelshin@postech.ac.kr**. Place all videos in `data/input_video/` as `<Video_name>.mp4`.
@@ -92,11 +92,11 @@ The videos are not redistributed. Unedited videos can be obtained from their ori
 ## Citation
 
 ```bibtex
-@inproceedings{shin2026instruct2alert,
+@inproceedings{shin2027instruct2alert,
   title     = {Instruct2Alert: Decoupling Visual Verification from Temporal Alert Control in Video Safety Monitoring},
   author    = {Shin, Yoel and Kim, Byung-In and Mo, Sangwoo},
-  booktitle = {TBD},
-  year      = {2026}
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year      = {2027}
 }
 ```
 
