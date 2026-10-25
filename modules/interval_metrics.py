@@ -202,8 +202,8 @@ def detection_delays(
     As for TTD, intervals are read on the sampled timeline, so an interval's
     onset is its first sampled timestamp. The delay runs from that onset to the
     first sampled timestamp inside the interval at which the alert is active.
-    ``None`` marks an interval that is never under alert (or never sampled);
-    DetRec@delta counts it as a miss.
+    ``None`` marks an interval that is never under alert (or never sampled),
+    and DetRec@delta counts it as a miss.
     """
     ordered = sorted(
         records,

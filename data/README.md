@@ -18,7 +18,7 @@ The annotations in this folder (`datasets/safety_vlm_dataset.xlsx`, `video_sourc
 | `Duration (Sec)` | duration condition parsed from the query (State only) |
 | `Primary_Target`, `Target` | main and contextual targets |
 | `Scenario_EN` | the natural-language instruction given to the system |
-| `GT_intervals_frame` | ground-truth alert intervals as native frame indices, 1-based inclusive; evaluation converts `[start, end]` to seconds as `[(start - 1) / fps, end / fps]` with the frame rate the decoder reports |
+| `GT_intervals_frame` | ground-truth alert intervals as native frame indices, 1-based inclusive. Evaluation converts `[start, end]` to seconds as `[(start - 1) / fps, end / fps]` with the frame rate the decoder reports |
 
 Annotation protocol: an interval starts when the queried condition becomes observable and ends when it stops holding. For State queries the onset is shifted by the query duration (shorter occurrences are negative). No clearing tolerance is applied to ground truth. See Sec. 1 of the supplement.
 
@@ -28,12 +28,12 @@ The videos are **not** redistributed. Obtain unedited videos from their original
 
 | `Source` value | Dataset | Videos | Scenarios | Where to obtain | Terms |
 |---|---|---|---|---|---|
-| `UCF` | UCF-Crime (Sultani et al., CVPR 2018) | 21 | 28 | [project page](https://www.crcv.ucf.edu/projects/real-world/); original file names, e.g. `Abuse001_x264` | research use only; cite the authors |
-| `AI_hub` | AI-Hub CCTV datasets 171 / 71850 / 71953 (NIA, Korea) | 24 | 26 | [aihub.or.kr](https://aihub.or.kr) (application required) | AI-Hub terms; redistribution not permitted |
+| `UCF` | UCF-Crime (Sultani et al., CVPR 2018) | 21 | 28 | [project page](https://www.crcv.ucf.edu/projects/real-world/), original file names such as `Abuse001_x264` | research use only, citation required |
+| `AI_hub` | AI-Hub CCTV datasets 171 / 71850 / 71953 (NIA, Korea) | 24 | 26 | [aihub.or.kr](https://aihub.or.kr) (application required) | AI-Hub terms, no redistribution |
 | `Youtube` | public YouTube videos | 15 | 17 | URLs and the scenarios using each clip in `video_sources.csv` (`v_007`–`v_010` are four clips of one video) | copyright of the uploaders |
-| `Safety_Bench` | iSafetyBench (Abdullah et al., ICCVW 2025) | 9 | 13 | [project page](https://isafetybench.github.io); file names `<YouTube id>_trim_<n>` | per the iSafetyBench release |
-| `NWPU` | NWPU Campus (Cao et al., CVPR 2023) | 9 | 9 | [project page](https://campusvad.github.io); e.g. `D035_01` | academic, non-commercial research only; redistribution not permitted |
-| `WEDA-FALL` | WEDA-FALL (Marques, 2023) | 7 | 7 | [GitHub](https://github.com/joaojtmarques/WEDA-FALL); `F01`–`F07` | per the WEDA-FALL release |
+| `Safety_Bench` | iSafetyBench (Abdullah et al., ICCVW 2025) | 9 | 13 | [project page](https://isafetybench.github.io), file names `<YouTube id>_trim_<n>` | per the iSafetyBench release |
+| `NWPU` | NWPU Campus (Cao et al., CVPR 2023) | 9 | 9 | [project page](https://campusvad.github.io), file names such as `D035_01` | academic, non-commercial research only, no redistribution |
+| `WEDA-FALL` | WEDA-FALL (Marques, 2023) | 7 | 7 | [GitHub](https://github.com/joaojtmarques/WEDA-FALL), `F01`–`F07` | per the WEDA-FALL release |
 
 Some clips were trimmed or edited from their source videos for the benchmark, so the original files alone do not match them. The clips themselves are not shared. To recreate them from the original videos, request the editing details (the source video and the start and end time of each clip) from **yoelshin@postech.ac.kr**.
 

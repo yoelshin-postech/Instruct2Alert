@@ -72,10 +72,10 @@ python scripts/evaluate.py --run-root data/main_runs/run
 | Scenarios | 100: 50 **Event** (instantaneous) and 50 **State** (duration-conditioned) |
 | Videos | 85, from UCF-Crime, AI-Hub CCTV, YouTube, iSafetyBench, NWPU Campus, WEDA-FALL |
 | Domains | Public 55, Industrial 28, Traffic 17 |
-| Annotation | Alert intervals per scenario; inter-annotator agreement is reported in the paper's supplementary material |
+| Annotation | Alert intervals per scenario, with inter-annotator agreement reported in the paper's supplementary material |
 | Files | [`data/datasets/safety_vlm_dataset.xlsx`](data/datasets/safety_vlm_dataset.xlsx), [`data/video_sources.csv`](data/video_sources.csv) (YouTube URLs) |
 
-The videos are not redistributed. Obtain them from their original sources ([`data/README.md`](data/README.md)) and place them in `data/input_video/` as `<Video_name>.mp4`. Some clips were trimmed or edited for the benchmark; the editing details needed to recreate them from the original videos are available on request from **yoelshin@postech.ac.kr**.
+The videos are not redistributed. Obtain them from their original sources ([`data/README.md`](data/README.md)) and place them in `data/input_video/` as `<Video_name>.mp4`. Some clips were trimmed or edited for the benchmark. The editing details needed to recreate them from the original videos are available on request from **yoelshin@postech.ac.kr**.
 
 ## Results
 
