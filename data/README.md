@@ -11,14 +11,14 @@ The annotations in this folder (`datasets/safety_vlm_dataset.xlsx`, `video_sourc
 | `Scenario_ID` | 1–100 |
 | `Video_name` | file stem of the video in `input_video/` (`<Video_name>.mp4`) |
 | `Source` | source dataset (see below) |
-| `Length(sec)` | clip length |
+| `Length(sec)` | approximate clip length in whole seconds |
 | `Domain` | Industrial (28) / Public (55) / Traffic (17) |
 | `Query_Type` | Event (50, instantaneous) / State (50, duration-conditioned) |
-| `Scenario_Category` | instruction family label |
+| `Scenario_Category` | scenario category, one of 13 labels such as Lying, Loitering, Security, Fire |
 | `Duration (Sec)` | duration condition parsed from the query (State only) |
 | `Primary_Target`, `Target` | main and contextual targets |
 | `Scenario_EN` | the natural-language instruction given to the system |
-| `GT_intervals_frame` | ground-truth alert intervals, native frame indices, 1-based inclusive |
+| `GT_intervals_frame` | ground-truth alert intervals as native frame indices, 1-based inclusive; evaluation converts `[start, end]` to seconds as `[(start - 1) / fps, end / fps]` with the frame rate the decoder reports |
 
 Annotation protocol: an interval starts when the queried condition becomes observable and ends when it stops holding. For State queries the onset is shifted by the query duration (shorter occurrences are negative). No clearing tolerance is applied to ground truth. See Sec. 1 of the supplement.
 

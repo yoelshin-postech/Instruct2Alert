@@ -169,29 +169,72 @@ def sampled_states_to_intervals(
     return intervals
 
 
-def frame_intervals_to_seconds(
-    frame_intervals: Iterable[Sequence[int]], source_fps: float,
-) -> list[Interval]:
-    """Convert 1-based inclusive annotation frame intervals to seconds."""
-    if source_fps <= 0:
-        raise ValueError("source_fps must be positive")
-    converted = []
+def _valid_frame_pairs(frame_intervals: Iterable[Sequence[int]]) -> list[tuple[int, int]]:
+    """Well-formed (start, end) annotation frame pairs, in their original order."""
+    pairs = []
     for interval in frame_intervals:
         if len(interval) < 2:
             continue
         start_frame, end_frame = int(interval[0]), int(interval[1])
         if end_frame < start_frame:
             continue
-        converted.append(Interval((start_frame - 1) / source_fps, end_frame / source_fps))
-    return converted
+        pairs.append((start_frame, end_frame))
+    return pairs
+
+
+def frame_intervals_to_seconds(
+    frame_intervals: Iterable[Sequence[int]], source_fps: float,
+) -> list[Interval]:
+    """Convert 1-based inclusive annotation frame intervals to seconds."""
+    if source_fps <= 0:
+        raise ValueError("source_fps must be positive")
+    return [Interval((start_frame - 1) / source_fps, end_frame / source_fps)
+            for start_frame, end_frame in _valid_frame_pairs(frame_intervals)]
+
+
+def detection_delays(
+    records: Sequence[dict],
+    prediction_key: str,
+    frame_intervals: Iterable[Sequence[int]],
+) -> list[float | None]:
+    """Return the detection delay of each annotated interval.
+
+    As for TTD, intervals are read on the sampled timeline, so an interval's
+    onset is its first sampled timestamp. The delay runs from that onset to the
+    first sampled timestamp inside the interval at which the alert is active.
+    ``None`` marks an interval that is never under alert (or never sampled);
+    DetRec@delta counts it as a miss.
+    """
+    ordered = sorted(
+        records,
+        key=lambda row: (float(row["video_timestamp_sec"]), int(row["frame_index"])),
+    )
+    delays: list[float | None] = []
+    for start_frame, end_frame in _valid_frame_pairs(frame_intervals):
+        inside = [row for row in ordered if start_frame <= int(row["frame_index"]) <= end_frame]
+        first_alert = next(
+            (row for row in inside if _as_yes_no(row.get(prediction_key)) == "Yes"), None)
+        delays.append(
+            float(first_alert["video_timestamp_sec"]) - float(inside[0]["video_timestamp_sec"])
+            if first_alert is not None else None
+        )
+    return delays
 
 
 def evaluate_interval_quality(
     predictions: Sequence[Interval],
     ground_truths: Sequence[Interval],
     tiou_threshold: float = 0.3,
+    delays: Sequence[float | None] | None = None,
+    detection_delta_sec: float = 3.0,
 ) -> tuple[dict, list[dict]]:
-    """Evaluate strict interval quality and return summary plus event records."""
+    """Evaluate strict interval quality and return summary plus event records.
+
+    ``delays`` (from ``detection_delays``, one per ground-truth interval) adds
+    DetRec@delta: the share of ground-truth intervals first under alert within
+    ``detection_delta_sec`` of their sampled onset, with missed intervals
+    counted as failures.
+    """
     strict_matches = maximum_cardinality_matching(
         predictions, ground_truths, threshold=tiou_threshold)
     overlap_matches = maximum_cardinality_matching(
@@ -201,8 +244,12 @@ def evaluate_interval_quality(
     strict_by_gt = {gt_index: (pred_index, iou)
                     for pred_index, gt_index, iou in strict_matches}
 
+    if delays is not None and len(delays) != len(ground_truths):
+        raise ValueError("Provide one detection delay per ground-truth interval.")
+
     onset_errors = []
     offset_errors = []
+    detected_within_delta = 0
     event_records = []
     for gt_index, ground_truth in enumerate(ground_truths):
         overlap = overlap_by_gt.get(gt_index)
@@ -217,7 +264,7 @@ def evaluate_interval_quality(
             onset_error = None
             offset_error = None
 
-        event_records.append({
+        record = {
             "gt_interval_index": gt_index,
             "gt_start_sec": round(ground_truth.start, 6),
             "gt_end_sec": round(ground_truth.end, 6),
@@ -229,7 +276,16 @@ def evaluate_interval_quality(
             "strict_tiou": round(strict[1], 6) if strict else None,
             "onset_abs_error_sec": round(onset_error, 6) if onset_error is not None else None,
             "offset_abs_error_sec": round(offset_error, 6) if offset_error is not None else None,
-        })
+        }
+        if delays is not None:
+            delay = delays[gt_index]
+            # The tolerance keeps a delay of exactly delta, accumulated from
+            # float timestamps, inside the budget.
+            within = delay is not None and delay <= detection_delta_sec + 1e-9
+            detected_within_delta += int(within)
+            record["detection_delay_sec"] = round(delay, 6) if delay is not None else None
+            record["detected_within_delta"] = within
+        event_records.append(record)
 
     metrics = {
         "ground_truth_interval_count": len(ground_truths),
@@ -240,6 +296,10 @@ def evaluate_interval_quality(
         "OnsetMAE_sec": (sum(onset_errors) / len(onset_errors)) if onset_errors else None,
         "OffsetMAE_sec": (sum(offset_errors) / len(offset_errors)) if offset_errors else None,
     }
+    if delays is not None:
+        metrics["detected_within_delta_count"] = detected_within_delta
+        metrics[f"DetRec_at_{detection_delta_sec:g}s"] = (
+            detected_within_delta / len(ground_truths) if ground_truths else None)
     return metrics, event_records
 
 
@@ -284,8 +344,12 @@ def evaluate_saved_run(
     run_root: str | Path,
     dataset_path: str | Path,
     tiou_threshold: float = 0.3,
+    detection_delta_sec: float = 3.0,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Evaluate every available internal variant from saved run artifacts."""
+    """Evaluate every available internal variant from saved run artifacts.
+
+    DetRec@delta is pooled over ground-truth intervals, like R@tIoU0.3.
+    """
     run_root = Path(run_root)
     results_root = run_root / "results"
     dataset = pd.read_excel(dataset_path)
@@ -351,12 +415,15 @@ def evaluate_saved_run(
             metrics, events = evaluate_interval_quality(
                 predictions, ground_truths,
                 tiou_threshold=tiou_threshold,
+                delays=detection_delays(pooled, prediction_key, raw_gt),
+                detection_delta_sec=detection_delta_sec,
             )
             scenario_rows.append({
                 "method": method,
                 "scenario_id": int(dataset_row["Scenario_ID"]),
                 "video_id": dataset_row["Video_name"],
                 "tiou_threshold": tiou_threshold,
+                "detection_delta_sec": detection_delta_sec,
                 "ground_truth_intervals": json.dumps(
                     [interval.as_dict() for interval in ground_truths]),
                 "predicted_intervals": json.dumps(
@@ -378,6 +445,7 @@ def evaluate_saved_run(
     for method, group in scenario_df.groupby("method") if not scenario_df.empty else []:
         n_gt = int(group["ground_truth_interval_count"].sum())
         n_strict = int(group["strict_match_count"].sum())
+        n_detected = int(group["detected_within_delta_count"].sum())
         overlap = group[group["positive_overlap_match_count"] > 0]
         total_overlap = int(group["positive_overlap_match_count"].sum())
         # MAE is event-weighted, so aggregate from event rows rather than
@@ -394,6 +462,7 @@ def evaluate_saved_run(
             "R_at_tIoU_0_3": n_strict / n_gt if n_gt else None,
             "OnsetMAE_sec": method_events["onset_abs_error_sec"].mean() if not method_events.empty else None,
             "OffsetMAE_sec": method_events["offset_abs_error_sec"].mean() if not method_events.empty else None,
+            f"DetRec_at_{detection_delta_sec:g}s": n_detected / n_gt if n_gt else None,
         })
     summary_df = pd.DataFrame(summary_rows)
 

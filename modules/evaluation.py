@@ -18,7 +18,9 @@ planner failure) count as zero, so failures stay in the denominator.
 Outputs, written under <run_root>/results/:
   summary.csv        one row per variant
   per_scenario.csv   one row per variant and scenario
-  interval_metrics/  interval-level details
+  interval_metrics/  interval-level details, including Onset/Offset MAE and
+                     DetRec@3s (intervals first under alert within 3 s,
+                     pooled over ground-truth intervals)
 """
 
 import json
