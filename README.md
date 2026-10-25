@@ -73,9 +73,9 @@ python scripts/evaluate.py --run-root data/main_runs/run
 | Videos | 85, from UCF-Crime, AI-Hub CCTV, YouTube, iSafetyBench, NWPU Campus, WEDA-FALL |
 | Domains | Public 55, Industrial 28, Traffic 17 |
 | Annotation | Alert intervals per scenario; inter-annotator agreement is reported in the paper's supplementary material |
-| Files | [`data/datasets/safety_vlm_dataset.xlsx`](data/datasets/safety_vlm_dataset.xlsx), [`data/video_sources.csv`](data/video_sources.csv) |
+| Files | [`data/datasets/safety_vlm_dataset.xlsx`](data/datasets/safety_vlm_dataset.xlsx), [`data/video_sources.csv`](data/video_sources.csv) (YouTube URLs) |
 
-The videos are not redistributed. Unedited videos can be obtained from their original sources ([`data/README.md`](data/README.md)). Some clips were trimmed or edited for the benchmark; to request them for non-commercial research use, email **yoelshin@postech.ac.kr**. Place all videos in `data/input_video/` as `<Video_name>.mp4`.
+The videos are not redistributed. Obtain them from their original sources ([`data/README.md`](data/README.md)) and place them in `data/input_video/` as `<Video_name>.mp4`. Some clips were trimmed or edited for the benchmark; the editing details needed to recreate them from the original videos are available on request from **yoelshin@postech.ac.kr**.
 
 ## Results
 
